@@ -1,0 +1,12 @@
+idf_component_register(
+                        SRCS
+                           "src/lvgl_port.c"
+                        INCLUDE_DIRS
+                           "inc"
+                           "../Drv/inc"
+                           "../Screens/inc"
+                        REQUIRES
+                           Drv
+                           esp_lcd
+                           lvgl
+                        )

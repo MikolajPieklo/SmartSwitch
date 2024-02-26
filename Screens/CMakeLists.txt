@@ -1,0 +1,11 @@
+idf_component_register(
+                        SRCS
+                           "src/main_screen.c"
+                           "src/icn_wifi_green.c"
+                           "src/icn_wifi_yellow.c"
+                           "src/icn_wifi_red.c"
+                        INCLUDE_DIRS
+                           "inc"
+                        REQUIRES
+                           lvgl
+                        )

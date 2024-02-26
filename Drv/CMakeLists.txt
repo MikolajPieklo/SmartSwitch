@@ -1,0 +1,13 @@
+idf_component_register(
+                        SRCS
+                           "src/gt911.c"
+                           "src/st7701.c"
+                           "src/esp_lcd_panel_io_3wire_spi.c"
+                           "src/esp_io_expander.c"
+                        INCLUDE_DIRS
+                           "inc"
+                        REQUIRES
+                           driver
+                           esp_lcd
+                           lvgl
+                        )
