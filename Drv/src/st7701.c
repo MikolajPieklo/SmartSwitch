@@ -25,6 +25,7 @@
 
 #include "hardware_conf.h"
 #include <lvgl.h>
+#include <mcpwm.h>
 
 /************************************
  * EXTERN VARIABLES
@@ -197,8 +198,7 @@ static bool example_on_vsync_event(esp_lcd_panel_handle_t panel, const esp_lcd_r
  ************************************/
 void ST7701_Init(esp_lcd_panel_handle_t panel_handle1)
 {
-   gpio_set_direction(PIN_NUM_BCKL, GPIO_MODE_OUTPUT);
-   gpio_set_level(PIN_NUM_BCKL, 1);
+   Mcpwm_Init();
 
    ESP_LOGI(TAG, "Initialize SPI driver");
 

@@ -6,6 +6,7 @@ idf_component_register(
                            "src/icn_wifi_red.c"
                         INCLUDE_DIRS
                            "inc"
+                           "../Drv/inc"
                         REQUIRES
                            lvgl
                         )

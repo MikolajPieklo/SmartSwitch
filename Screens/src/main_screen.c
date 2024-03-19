@@ -12,6 +12,10 @@
  ************************************/
 #include <lvgl.h>
 
+#ifndef _SIMULATOR
+#include <mcpwm.h>
+#endif
+
 /************************************
  * EXTERN VARIABLES
  ************************************/
@@ -43,6 +47,8 @@ lv_obj_t *header_img_wifi = NULL;
 lv_obj_t *header_ip = NULL;
 lv_obj_t *header_time = NULL;
 
+lv_obj_t *slider_label = NULL;
+
 /************************************
  * GLOBAL VARIABLES
  ************************************/
@@ -50,12 +56,13 @@ lv_obj_t *header_time = NULL;
 /************************************
  * STATIC FUNCTION PROTOTYPES
  ************************************/
-static void my_event(lv_event_t *e);
+static void gesture_event_eb(lv_event_t *e);
+static void slider_event_cb(lv_event_t *e);
 
 /************************************
  * STATIC FUNCTIONS
  ************************************/
-static void my_event(lv_event_t *e)
+static void gesture_event_eb(lv_event_t *e)
 {
    lv_obj_t *screen = lv_event_get_current_target(e);
    lv_dir_t dir = lv_indev_get_gesture_dir(lv_indev_active());
@@ -91,6 +98,18 @@ static void my_event(lv_event_t *e)
    }
 }
 
+static void slider_event_cb(lv_event_t *e)
+{
+   lv_obj_t *slider = lv_event_get_target(e);
+   char buf[8];
+   lv_snprintf(buf, sizeof(buf), "%d%%", (int)lv_slider_get_value(slider));
+   lv_label_set_text(slider_label, buf);
+   lv_obj_align_to(slider_label, slider, LV_ALIGN_OUT_BOTTOM_MID, 0, 10);
+#ifndef _SIMULATOR
+   Mcpwm_Set_Value((uint32_t)lv_slider_get_value(slider));
+#endif
+}
+
 /************************************
  * GLOBAL FUNCTIONS
  ************************************/
@@ -107,7 +126,7 @@ void Main_Screen_Init(void)
    lv_obj_set_style_bg_opa(main_screen, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
    lv_obj_set_style_bg_grad_color(main_screen, lv_color_hex(0x2D323C), LV_PART_MAIN | LV_STATE_DEFAULT);
 
-   lv_obj_add_event_cb(main_screen, my_event, LV_EVENT_GESTURE, NULL);
+   lv_obj_add_event_cb(main_screen, gesture_event_eb, LV_EVENT_GESTURE, NULL);
 
    header = lv_obj_create(main_screen);
    lv_obj_set_height(header, 50);
@@ -154,6 +173,18 @@ void Main_Screen_Init(void)
    status_label = lv_label_create(main_screen);
    lv_obj_align(status_label, LV_ALIGN_BOTTOM_LEFT, 0, -50);
    lv_label_set_text(status_label, "Status");
+
+   /*Create a slider in the center of the display*/
+   lv_obj_t *slider = lv_slider_create(main_screen);
+   lv_obj_center(slider);
+   lv_obj_add_event_cb(slider, slider_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
+   lv_slider_set_value(slider, 50, LV_ANIM_OFF);
+   lv_obj_set_style_anim_duration(slider, 2000, 0);
+
+   /*Create a label below the slider*/
+   slider_label = lv_label_create(main_screen);
+   lv_label_set_text(slider_label, "0%");
+   lv_obj_align_to(slider_label, slider, LV_ALIGN_OUT_BOTTOM_MID, 0, 10);
 
    lv_disp_load_scr(main_screen);
 }

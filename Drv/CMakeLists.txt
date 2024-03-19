@@ -4,6 +4,7 @@ idf_component_register(
                            "src/st7701.c"
                            "src/esp_lcd_panel_io_3wire_spi.c"
                            "src/esp_io_expander.c"
+                           "src/mcpwm.c"
                         INCLUDE_DIRS
                            "inc"
                         REQUIRES
