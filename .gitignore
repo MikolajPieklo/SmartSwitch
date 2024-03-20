@@ -5,3 +5,4 @@ sdkconfig
 sdkconfig.ci
 .devcontainer/
 *.old
+mywifi

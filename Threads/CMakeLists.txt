@@ -1,0 +1,10 @@
+idf_component_register(
+                     SRCS
+                        "src/task_wifi.c"
+                     INCLUDE_DIRS
+                        "inc"
+                     REQUIRES
+                        esp_event
+                        esp_netif
+                        esp_wifi
+                        lwip)

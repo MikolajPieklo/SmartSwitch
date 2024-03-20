@@ -1,2 +1,12 @@
-idf_component_register(SRCS "main.c"
-                    INCLUDE_DIRS "../Drv/inc")
+idf_component_register(
+                     SRCS
+                        "main.c"
+                     INCLUDE_DIRS
+                        "../Drv/inc"
+                        "../Hal/inc"
+                        "../Threads/inc"
+                     REQUIRES
+                        esp_driver_gpio
+                        esp_psram
+                        nvs_flash
+                        spi_flash)
