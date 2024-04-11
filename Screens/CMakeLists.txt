@@ -2,11 +2,14 @@ idf_component_register(
                         SRCS
                            "src/main_screen.c"
                            "src/icn_wifi_green.c"
+                           "src/icn_wifi_green2.c"
                            "src/icn_wifi_yellow.c"
                            "src/icn_wifi_red.c"
+                           "src/icn_wifi_no_signal.c"
                         INCLUDE_DIRS
                            "inc"
                            "../Drv/inc"
                         REQUIRES
                            lvgl
+                           esp_wifi
                         )

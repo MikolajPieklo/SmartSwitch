@@ -10,8 +10,8 @@ else()
    set(PASS "none")
 endif()
 
-add_definitions(-DLOCAL_ESP_WIFI_SSID="${SSID}")
-add_definitions(-DLOCAL_ESP_WIFI_PASS="${PASS}")
+add_compile_definitions(LOCAL_ESP_WIFI_SSID="${SSID}")
+add_compile_definitions(LOCAL_ESP_WIFI_PASS="${PASS}")
 
 set(EXTRA_COMPONENT_DIRS "Drv" "Hal" "Screens" "Threads")
 

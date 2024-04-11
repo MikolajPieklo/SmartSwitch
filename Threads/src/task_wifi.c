@@ -4,6 +4,19 @@
  * @author  Mikolaj Pieklo
  * @date    20.03.2024
  * @brief
+ * https://docs.espressif.com/projects/esp-idf/en/v5.1.2/esp32s3/api-reference/system/log.html
+ * https://docs.espressif.com/projects/esp-idf/en/v5.1.2/esp32s3/api-reference/system/misc_system_api.html
+ *
+ * https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/network/index.html
+ * https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/network/esp_wifi.html
+ * https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/network/esp_netif.html
+ * https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/system_time.html
+ * https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-guides/lwip.html
+ * https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-reference/storage/nvs_flash.html
+ * https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-reference/system/esp_event.html
+ *
+ * picocom /dev/ttyS0 -b 115200 -l | tee my.log
+ *
  ********************************************************************************
  */
 
@@ -19,6 +32,7 @@
 #include <freertos/event_groups.h>
 #include <freertos/task.h>
 
+#include <main_screen.h>
 #include <task_wifi.h>
 
 /************************************
@@ -94,6 +108,7 @@ static void event_handler(void *arg, esp_event_base_t event_base, int32_t event_
    {
       ip_event_got_ip_t *event = (ip_event_got_ip_t *)event_data;
       ESP_LOGI(TAG, "got ip:" IPSTR, IP2STR(&event->ip_info.ip));
+      Main_Screen_IP_Update(&(event->ip_info.ip.addr));
       s_retry_num = 0;
       xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
    }
@@ -156,6 +171,7 @@ static void vTask_Wifi(void *pvParameters)
       }
       else
       {
+         Main_Screen_Time_Update_Start();
          ESP_LOGI(TAG, "Updated system time");
       }
    }
@@ -170,7 +186,6 @@ static void vTask_Wifi(void *pvParameters)
 
    for (;;)
    {
-      ESP_LOGI(TAG, "WIFI");
       vTaskDelay(pdMS_TO_TICKS(1000));
    }
 }

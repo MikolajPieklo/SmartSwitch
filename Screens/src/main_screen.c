@@ -11,10 +11,14 @@
  * INCLUDES
  ************************************/
 #include <lvgl.h>
+#include <time.h>
 
 #ifndef _SIMULATOR
+#include <esp_log.h>
 #include <esp_system.h>
+#include <esp_wifi.h>
 
+#include <main_screen.h>
 #include <mcpwm.h>
 #endif
 
@@ -38,6 +42,7 @@ extern const lv_image_dsc_t icn_wifi_no_signal;
 /************************************
  * STATIC VARIABLES
  ************************************/
+static const char *TAG = "MAIN_SCREEN";
 lv_obj_t *status_label = NULL;
 
 lv_obj_t *main_screen = NULL;
@@ -49,9 +54,11 @@ lv_obj_t *header_flex_restart_button = NULL;
 lv_obj_t *header_flex_restart_button_label = NULL;
 lv_obj_t *header_img_wifi = NULL;
 lv_obj_t *header_ip = NULL;
+lv_obj_t *header_rssi = NULL;
 lv_obj_t *header_time = NULL;
-
 lv_obj_t *slider_label = NULL;
+
+lv_timer_t *tim_time_update = NULL;
 
 /************************************
  * GLOBAL VARIABLES
@@ -63,6 +70,7 @@ lv_obj_t *slider_label = NULL;
 static void restart_button_event_cb(lv_event_t *e);
 static void gesture_event_cb(lv_event_t *e);
 static void slider_event_cb(lv_event_t *e);
+static void tim_time_update_cb(lv_timer_t *timer);
 
 static void create_restart_button(void);
 
@@ -131,6 +139,31 @@ static void slider_event_cb(lv_event_t *e)
 #endif
 }
 
+static void tim_time_update_cb(lv_timer_t *timer)
+{
+   static bool is_first_run = true;
+   time_t now = 0;
+   struct tm timeinfo;
+
+   time(&now);
+   localtime_r(&now, &timeinfo);
+   if ((true == is_first_run) || ((0 == timeinfo.tm_hour) && (0 == timeinfo.tm_min) && (0 == timeinfo.tm_sec)))
+   {
+      lv_label_set_text_fmt(header_date, "%02d.%02d.%04d", timeinfo.tm_mday, timeinfo.tm_mon + 1,
+                            timeinfo.tm_year + 1900);
+      is_first_run = false;
+   }
+
+   lv_label_set_text_fmt(header_time, "%02d:%02d:%02d", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
+
+#ifndef _SIMULATOR
+   int rssi = -70;
+   ESP_ERROR_CHECK(esp_wifi_sta_get_rssi(&rssi));
+   ESP_LOGI(TAG, "rssi %d", rssi);
+   Main_Screen_WiFi_Rssi_Update(rssi);
+#endif
+}
+
 static void create_restart_button(void)
 {
    header_flex_restart_button = lv_button_create(header_flex);
@@ -177,15 +210,23 @@ void Main_Screen_Init(void)
    lv_obj_set_width(header_date, LV_SIZE_CONTENT);
    lv_obj_set_height(header_date, LV_SIZE_CONTENT);
    lv_obj_set_align(header_date, LV_ALIGN_LEFT_MID);
-   lv_label_set_text(header_date, "Friday, March 11, 2024");
+   lv_label_set_text(header_date, "01.01.1970");
    lv_obj_set_style_text_color(header_date, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
    lv_obj_set_style_text_opa(header_date, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+   header_rssi = lv_label_create(header);
+   lv_obj_set_width(header_rssi, LV_SIZE_CONTENT);
+   lv_obj_set_height(header_rssi, LV_SIZE_CONTENT);
+   lv_obj_set_x(header_rssi, 120);
+   lv_label_set_text(header_rssi, "00");
+   lv_obj_set_style_text_color(header_rssi, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+   lv_obj_set_style_text_opa(header_rssi, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
 
    header_time = lv_label_create(header);
    lv_obj_set_width(header_time, LV_SIZE_CONTENT);
    lv_obj_set_height(header_time, LV_SIZE_CONTENT);
    lv_obj_set_align(header_time, LV_ALIGN_RIGHT_MID);
-   lv_label_set_text(header_time, "07:45");
+   lv_label_set_text(header_time, "00:00:00");
    lv_obj_set_style_text_color(header_time, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
    lv_obj_set_style_text_opa(header_time, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
 
@@ -194,12 +235,12 @@ void Main_Screen_Init(void)
    lv_obj_set_height(header_ip, LV_SIZE_CONTENT);
    // lv_obj_set_align(header_ip, LV_ALIGN_CENTER);
    lv_obj_set_x(header_ip, 260);
-   lv_label_set_text(header_ip, "192.168.100.100");
+   lv_label_set_text(header_ip, "0.0.0.0");
    lv_obj_set_style_text_color(header_ip, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
    lv_obj_set_style_text_opa(header_ip, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
 
    header_img_wifi = lv_img_create(header);
-   lv_img_set_src(header_img_wifi, &icn_wifi_yellow);
+   lv_img_set_src(header_img_wifi, &icn_wifi_no_signal);
    lv_obj_set_width(header_img_wifi, LV_SIZE_CONTENT);    /// 100
    lv_obj_set_height(header_img_wifi, LV_SIZE_CONTENT);   /// 50
    lv_obj_set_align(header_img_wifi, LV_ALIGN_CENTER);
@@ -222,4 +263,41 @@ void Main_Screen_Init(void)
    lv_obj_align_to(slider_label, slider, LV_ALIGN_OUT_BOTTOM_MID, 0, 10);
 
    lv_disp_load_scr(main_screen);
+}
+
+void Main_Screen_Time_Update_Start(void)
+{
+   setenv("PL", "CST-8", 1);
+   tim_time_update = lv_timer_create(tim_time_update_cb, 1000, NULL);
+}
+
+void Main_Screen_IP_Update(uint32_t *ip)
+{
+   lv_label_set_text_fmt(header_ip, "%d.%d.%d.%d", (uint8_t)(*ip & 0xFF), (uint8_t)((*ip >> 8) & 0xFF),
+                         (uint8_t)((*ip >> 16) & 0xFF), (uint8_t)((*ip >> 24) & 0xFF));
+}
+
+void Main_Screen_WiFi_Rssi_Update(int rssi)
+{
+   lv_label_set_text_fmt(header_rssi, "%d", rssi);
+   if (rssi >= -50)
+   {
+      lv_img_set_src(header_img_wifi, &icn_wifi_green);
+   }
+   else if ((rssi >= -60) && (rssi < -50))
+   {
+      lv_img_set_src(header_img_wifi, &icn_wifi_green2);
+   }
+   else if ((rssi >= -75) && (rssi < -60))
+   {
+      lv_img_set_src(header_img_wifi, &icn_wifi_yellow);
+   }
+   else if ((rssi >= -100) && (rssi < -75))
+   {
+      lv_img_set_src(header_img_wifi, &icn_wifi_red);
+   }
+   else
+   {
+      lv_img_set_src(header_img_wifi, &icn_wifi_no_signal);
+   }
 }

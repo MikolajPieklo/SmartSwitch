@@ -3,6 +3,7 @@ idf_component_register(
                         "src/task_wifi.c"
                      INCLUDE_DIRS
                         "inc"
+                        "../Screens/inc"
                      REQUIRES
                         esp_event
                         esp_netif
