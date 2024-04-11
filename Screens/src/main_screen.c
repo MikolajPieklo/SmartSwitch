@@ -73,6 +73,7 @@ static void slider_event_cb(lv_event_t *e);
 static void tim_time_update_cb(lv_timer_t *timer);
 
 static void create_restart_button(void);
+static void create_brightness_slider(void);
 
 /************************************
  * STATIC FUNCTIONS
@@ -122,6 +123,7 @@ static void gesture_event_cb(lv_event_t *e)
          lv_obj_set_style_bg_opa(header_flex, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
          lv_obj_set_style_border_width(header_flex, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
          create_restart_button();
+         create_brightness_slider();
 
          break;
    }
@@ -176,6 +178,22 @@ static void create_restart_button(void)
    header_flex_restart_button_label = lv_label_create(header_flex_restart_button);
    lv_label_set_text(header_flex_restart_button_label, "Reset");
    lv_obj_center(header_flex_restart_button_label);
+}
+
+static void create_brightness_slider(void)
+{
+   /*Create a slider in the center of the display*/
+   lv_obj_t *slider = lv_slider_create(header_flex);
+   lv_obj_center(slider);
+   lv_obj_add_event_cb(slider, slider_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
+   lv_slider_set_value(slider, 50, LV_ANIM_OFF);
+   lv_obj_set_style_anim_duration(slider, 2000, 0);
+
+   /*Create a label below the slider*/
+   slider_label = lv_label_create(header_flex);
+   lv_label_set_text(slider_label, "50%");
+   lv_obj_set_style_text_color(slider_label, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+   lv_obj_align_to(slider_label, slider, LV_ALIGN_OUT_BOTTOM_MID, 0, 10);
 }
 
 /************************************
@@ -249,18 +267,6 @@ void Main_Screen_Init(void)
    status_label = lv_label_create(main_screen);
    lv_obj_align(status_label, LV_ALIGN_BOTTOM_LEFT, 0, -50);
    lv_label_set_text(status_label, "Status");
-
-   /*Create a slider in the center of the display*/
-   lv_obj_t *slider = lv_slider_create(main_screen);
-   lv_obj_center(slider);
-   lv_obj_add_event_cb(slider, slider_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
-   lv_slider_set_value(slider, 50, LV_ANIM_OFF);
-   lv_obj_set_style_anim_duration(slider, 2000, 0);
-
-   /*Create a label below the slider*/
-   slider_label = lv_label_create(main_screen);
-   lv_label_set_text(slider_label, "0%");
-   lv_obj_align_to(slider_label, slider, LV_ALIGN_OUT_BOTTOM_MID, 0, 10);
 
    lv_disp_load_scr(main_screen);
 }
